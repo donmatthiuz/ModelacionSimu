@@ -1,6 +1,6 @@
 using JuMP, HiGHS, Printf
 
-# a) Formular el problema de programamci´on lineal.
+# a) Formular el problema de programamcion lineal.
 
 # Sabemos que tenemos 6 horarios y el $$x_i$$ representa los buses entonces la funcion a minimizar sera la suma de los buses
 
