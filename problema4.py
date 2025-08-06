@@ -69,4 +69,5 @@ def newton(a, funcion, derivada, iter, tol):
         if funcion(a) == 0 or np.abs(funcion(a)-0) < tol:
             print(f"Iteración {i}, valor aproximado: {a}")
             return a, aproximaciones, yaproximaciones
-        
+    return None, aproximaciones, yaproximaciones 
+
