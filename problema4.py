@@ -43,7 +43,7 @@ def secante(a, b, funcion, iter, tol):
         yaproximaciones.append(funcion(nuevo_valor))
 
         if funcion(nuevo_valor) == 0 or np.abs(b-nuevo_valor) < tol:
-            print(f"Iteración{i}, raíz aroximada encontrada en: {nuevo_valor}")
+            print(f"Iteración {i}, raíz aroximada encontrada en: {nuevo_valor}")
             return nuevo_valor, aproximaciones, yaproximaciones
 
         a = b
@@ -51,4 +51,22 @@ def secante(a, b, funcion, iter, tol):
 
     print("No se halló la raíz")
     return None, aproximaciones, yaproximaciones
+
+
+def newton(a, funcion, derivada, iter, tol):
+    aproximaciones = []
+    yaproximaciones = []
+    for i in range(iter+1):
+
+        if derivada(a) == 0:
+            print("Error: división por 0")
+            return None, [], []
+        
+        a = a - (funcion(a)/derivada(a))
+        aproximaciones.append(a)
+        yaproximaciones.append(funcion(a))
+
+        if funcion(a) == 0 or np.abs(funcion(a)-0) < tol:
+            print(f"Iteración {i}, valor aproximado: {a}")
+            return a, aproximaciones, yaproximaciones
         
