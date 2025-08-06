@@ -4,10 +4,12 @@ using HiGHS
 # Matriz de costos (usamos 9999 como valor prohibido)
 INF = 9999
 cost = [
-    50   50    INF  20;
-    70   40    20   30;
-    90   30    50   INF;
-    70   20    60   70
+    3  8  2 10  3  9;
+    2  2  7  6  5  7;
+    5  6  4  5  6  6;
+    4  2  7  5  4  7;
+    10 3  4  2  3  5;
+    3  5  4  2  3  8
 ]
 
 n_trabajadores, n_puestos = size(cost)
