@@ -1,11 +1,16 @@
-from problema4 import biseccion
+from problema4 import biseccion, secante, newton
 
 def funcion(x):
     return (x**2 + 1)/(x-7)
     
-def funcion2(x):
-    return (2*(x**3))+ (3*(x**2)) + x -26
 
-print(biseccion(-1, 3, funcion2, 100, 1e-7))
+def derivada(x):
+    return ((x**2-(14*x) -1)/((x-7))**2)
 
-print(funcion2(2))
+
+
+
+
+
+
+newton(25,funcion, derivada, 100, 1e-7)
