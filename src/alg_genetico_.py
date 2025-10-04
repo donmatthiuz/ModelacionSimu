@@ -129,26 +129,51 @@ def siguienteGeneracion(actual, numElite, tasa):
 
 
 
-def algoritmoGenetico(ciudades, tamanoPoblacion, elite, tasaMutacion, generaciones):
-    poblacion = poblacionInicial(tamanoPoblacion, ciudades)
+def algoritmoGenetico(ciudades, N, maxIter, fracElite=0.2, fracCrossover=0.6, fracMutation=0.2):
+    # Validación rápida
+    total_frac = fracElite + fracCrossover + fracMutation
+    if not np.isclose(total_frac, 1.0):
+        raise ValueError("La suma de los fraccionamientos debe ser 1.0")
+
+    
+    poblacion = poblacionInicial(N, ciudades)
     progreso = [1 / ordenarPoblacion(poblacion)[0][1]]
     print(f"Distancia inicial: {progreso[0]:.2f}")
-
     mejores_rutas = [poblacion[ordenarPoblacion(poblacion)[0][0]]]
 
-    # Evolución
-    for gen in range(1, generaciones + 1):
-        poblacion = siguienteGeneracion(poblacion, elite, tasaMutacion)
+    
+    numElite = int(fracElite * N)
+    numCrossover = int(fracCrossover * N)
+    numMutation = N - numElite - numCrossover  # por seguridad
+
+    for gen in range(1, maxIter + 1):
+        # Ranking
+        ranking = ordenarPoblacion(poblacion)
+        seleccionados = [i for i, _ in ranking[:numElite]]  # elite
+        eliteIndividuos = [poblacion[i] for i in seleccionados]
+
+        # Cruce
+        poolCruce = crearMatingPool(poblacion, seleccionados)
+        hijos = []
+        mezcla = random.sample(poolCruce, len(poolCruce))
+        for i in range(numCrossover):
+            padre = mezcla[i % len(mezcla)]
+            madre = mezcla[-(i % len(mezcla)) - 1]
+            hijos.append(cruzar(padre, madre))
+
+        # Mutación
+        mutados = mutarPoblacion(hijos[:numMutation], 1.0)  # mutación completa
+        nuevosIndividuos = eliteIndividuos + hijos[numMutation:] + mutados
+        poblacion = nuevosIndividuos[:N]  # ajustar si hay exceso
         mejor_idx = ordenarPoblacion(poblacion)[0][0]
         mejor = 1 / ordenarPoblacion(poblacion)[0][1]
         progreso.append(mejor)
         mejores_rutas.append(poblacion[mejor_idx])
+
         if gen % 10 == 0:
             print(f"Generación {gen}: distancia = {mejor:.2f}")
 
-    # --- Crear animación ---
     fig, ax = plt.subplots(figsize=(6, 6))
-
     def actualizar(i):
         ax.clear()
         camino = mejores_rutas[i]
@@ -161,6 +186,5 @@ def algoritmoGenetico(ciudades, tamanoPoblacion, elite, tasaMutacion, generacion
         ax.grid(True)
 
     anim = animation.FuncAnimation(fig, actualizar, frames=len(mejores_rutas), interval=200, repeat=False)
-
-    plt.close(fig)  # Evita mostrar duplicado
+    plt.close(fig)
     return mejores_rutas[-1], anim
