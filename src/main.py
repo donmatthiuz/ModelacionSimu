@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 from tsplib import load_tsplib_2d
 from tsp_utils import make_invented_instance, save_tsplib
-from lp_tsp import solve_tsp_mtz
+from lp_tsp import solve_tsp_mtz, solve_tsp_cutplane
 import matplotlib.pyplot as plt
 
 
@@ -74,3 +74,12 @@ def plot_tsp_route(coords, route, title="TSP Route", filename=None):
 
 #main()
 
+# gr229_path = "./data/gr229.tsp"
+# gr229 = load_tsplib_2d(gr229_path)
+# D = distance_matrix(gr229.coords)
+# lp_res = solve_tsp_cutplane(D, 200)
+# print(f"[gr229] Status={lp_res.status}, Distancia={lp_res.length:.2f}, Tiempo={lp_res.elapsed:.2f}s")
+
+# plot_tsp_route(gr229.coords, lp_res.route,
+#                title=f"kl - Distancia: {lp_res.length:.2f}",
+#                filename="plots/k.png")
