@@ -180,7 +180,7 @@ def algoritmoGenetico(ciudades, N, maxIter, fracElite=0.2, fracCrossover=0.6, fr
             print(f"Generación {gen}: distancia = {mejor:.2f}")
 
         if gen != 0:
-            if mejor - previous_value <= 0.01 :
+            if mejor - previous_value <= 1e-3 :
                 early_stopping_counter +=1
             else:
                 early_stopping_counter = 0
