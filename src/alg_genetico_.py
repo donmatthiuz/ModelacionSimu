@@ -130,6 +130,8 @@ def siguienteGeneracion(actual, numElite, tasa):
 
 
 def algoritmoGenetico(ciudades, N, maxIter, fracElite=0.2, fracCrossover=0.6, fracMutation=0.2):
+    early_stopping_counter = 0 #Nos servirá para parar el algoritmo si las soluciones empiezan a parecerse 
+    previous_value = 0
     # Validación rápida
     total_frac = fracElite + fracCrossover + fracMutation
     if not np.isclose(total_frac, 1.0):
@@ -172,6 +174,16 @@ def algoritmoGenetico(ciudades, N, maxIter, fracElite=0.2, fracCrossover=0.6, fr
 
         if gen % 10 == 0:
             print(f"Generación {gen}: distancia = {mejor:.2f}")
+
+        if gen != 0:
+            if mejor - previous_value <= 0.001 :
+                early_stopping_counter +=1
+
+                if early_stopping_counter == 5:
+                    print(f"Early stopping en la generación: {gen}, el anterior fue {previous_value} y el actual {mejor} ")
+                    break
+                previous_value = mejor
+
 
     fig, ax = plt.subplots(figsize=(6, 6))
     def actualizar(i):
