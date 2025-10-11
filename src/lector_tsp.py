@@ -1,7 +1,7 @@
 
 from alg_genetico_ import Punto
 
-def leer_tsp(file_path):
+def leer_tsp(file_path, problem_type):
     puntos = []
     with open(file_path, 'r') as f:
         lines = f.readlines()
@@ -20,5 +20,5 @@ def leer_tsp(file_path):
                 idx = int(partes[0])
                 x = float(partes[1])
                 y = float(partes[2])
-                puntos.append(Punto(nombre=idx, x=x, y=y))
+                puntos.append(Punto(nombre=idx, x=x, y=y, tipo = problem_type))
     return puntos

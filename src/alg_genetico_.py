@@ -9,15 +9,19 @@ import os
 
 
 class Punto:
-    def __init__(self, nombre, x, y):
+    def __init__(self, nombre, x, y, tipo):
         self.nombre = nombre
         self.x = x
         self.y = y
+        self.tipo = tipo
 
     def distancia(self, otro):
-        dx = abs(self.x - otro.x)
-        dy = abs(self.y - otro.y)
-        return np.sqrt(dx**2 + dy**2)
+        if self.tipo == "EUC":
+            dx = abs(self.x - otro.x)
+            dy = abs(self.y - otro.y)
+            return np.sqrt(dx**2 + dy**2)
+        else:
+            pass
 
     def __repr__(self):
         return f"({self.nombre})"
@@ -176,10 +180,10 @@ def algoritmoGenetico(ciudades, N, maxIter, fracElite=0.2, fracCrossover=0.6, fr
             print(f"Generación {gen}: distancia = {mejor:.2f}")
 
         if gen != 0:
-            if mejor - previous_value <= 0.001 :
+            if mejor - previous_value <= 0.01 :
                 early_stopping_counter +=1
 
-                if early_stopping_counter == 5:
+                if early_stopping_counter >= 5:
                     print(f"Early stopping en la generación: {gen}, el anterior fue {previous_value} y el actual {mejor} ")
                     break
         previous_value = mejor
