@@ -182,7 +182,7 @@ def algoritmoGenetico(ciudades, N, maxIter, fracElite=0.2, fracCrossover=0.6, fr
                 if early_stopping_counter == 5:
                     print(f"Early stopping en la generación: {gen}, el anterior fue {previous_value} y el actual {mejor} ")
                     break
-                previous_value = mejor
+        previous_value = mejor
 
 
     fig, ax = plt.subplots(figsize=(6, 6))
