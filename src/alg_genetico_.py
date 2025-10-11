@@ -5,7 +5,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import os
+import math
 
+
+R = 6378.388
+
+def to_rad(x):
+    deg = int(x)
+    minutes = x - deg
+    return math.pi * (deg + 5.0 * minutes / 3.0) / 180.0
 
 
 class Punto:
@@ -21,7 +29,17 @@ class Punto:
             dy = abs(self.y - otro.y)
             return np.sqrt(dx**2 + dy**2)
         else:
-            pass
+            lat1 = to_rad(self.x)
+            lon1 = to_rad(self.y)
+            lat2 = to_rad(otro.x)
+            lon2 = to_rad(otro.y)
+
+            q1 = math.cos(lon1 - lon2)
+            q2 = math.cos(lat1 - lat2)
+            q3 = math.cos(lat1 + lat2)
+            dij = R * math.acos(0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3))
+
+            return int(dij + 1.0)
 
     def __repr__(self):
         return f"({self.nombre})"
