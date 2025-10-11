@@ -209,18 +209,43 @@ def algoritmoGenetico(ciudades, N, maxIter, fracElite=0.2, fracCrossover=0.6, fr
         previous_value = mejor
 
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(7, 7))
+
     def actualizar(i):
         ax.clear()
         camino = mejores_rutas[i]
         x = [p.x for p in camino] + [camino[0].x]
         y = [p.y for p in camino] + [camino[0].y]
-        ax.plot(x, y, marker='o', color='tab:blue')
-        ax.set_title(f"Generación {i} | Distancia = {progreso[i]:.2f}")
-        ax.set_xlim(0, 200)
-        ax.set_ylim(0, 200)
-        ax.grid(True)
+        
+        # Graficar la ruta
+        ax.plot(x, y, color='tab:blue', linewidth=1.5, alpha=0.8)
+        
+        # Puntos intermedios
+        ax.scatter(x[1:-1], y[1:-1], color='deepskyblue', s=30, alpha=0.7)
+        
+        # Punto de inicio
+        ax.scatter(x[0], y[0], color='green', s=100, label='Inicio', zorder=5, edgecolors='black')
+        
+        # Punto final (igual que inicio, pero diferente color)
+        ax.scatter(x[-2], y[-2], color='red', s=100, label='Fin', zorder=5, edgecolors='black')
 
-    anim = animation.FuncAnimation(fig, actualizar, frames=len(mejores_rutas), interval=200, repeat=False)
+        # Centrar los ejes dinámicamente
+        ax.set_xlim(min(x) - 10, max(x) + 10)
+        ax.set_ylim(min(y) - 10, max(y) + 10)
+
+        # Estilo general
+        ax.set_title(f"Generación {i} | Distancia = {progreso[i]:.2f}", fontsize=12, pad=15)
+        ax.set_xlabel("X (coordenada)")
+        ax.set_ylabel("Y (coordenada)")
+        ax.grid(True, linestyle='--', alpha=0.5)
+        ax.legend(loc='upper right')
+
+        # Ajustar proporción
+        ax.set_aspect('equal', adjustable='box')
+
+    # Crear animación
+    anim = animation.FuncAnimation(fig, actualizar, frames=len(mejores_rutas), interval=300, repeat=False)
+
     plt.close(fig)
     return mejores_rutas[-1], anim
+
