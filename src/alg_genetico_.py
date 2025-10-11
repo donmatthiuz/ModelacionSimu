@@ -194,19 +194,8 @@ def algoritmoGenetico(ciudades, N, maxIter, fracElite=0.2, fracCrossover=0.6, fr
         progreso.append(mejor)
         mejores_rutas.append(poblacion[mejor_idx])
 
-        if gen % 10 == 0:
-            print(f"Generación {gen}: distancia = {mejor:.2f}")
-
-        if gen != 0:
-            if mejor - previous_value <= 1e-3 :
-                early_stopping_counter +=1
-            else:
-                early_stopping_counter = 0
-
-            if early_stopping_counter >= 20:
-                print(f"Early stopping en la generación: {gen}, el anterior fue {previous_value} y el actual {mejor} ")
-                break
-        previous_value = mejor
+        if (gen % 10 == 0):
+            print(f"GENERACION {gen} distancia: {mejor}")
 
 
     fig, ax = plt.subplots(figsize=(7, 7))
