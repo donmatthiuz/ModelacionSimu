@@ -188,16 +188,16 @@ def make_and_move_automaton_gif(params, initial_infected, seed, outpath):
 
 def main():
     base_seed = 33 
-    Nexp = 30
+    Nexp = 30 
     particle_param_sets = [
         {'L':10.0,'N':200,'I0':5,'vmax':0.8,'r':0.3,'beta':1.5,'gamma':0.05,'dt':0.1,'steps':250},
         {'L':10.0,'N':200,'I0':5,'vmax':0.4,'r':0.3,'beta':0.8,'gamma':0.05,'dt':0.1,'steps':250},
         {'L':12.0,'N':300,'I0':10,'vmax':0.8,'r':0.25,'beta':1.2,'gamma':0.06,'dt':0.1,'steps':250}
     ]
     automaton_param_sets = [
-        {'M':100,'N':100,'I0':20,'r':2,'beta':0.4,'gamma':0.05,'T':250,'start_point':(20,20)},
-        {'M':100,'N':100,'I0':20,'r':1,'beta':0.3,'gamma':0.05,'T':250,'start_point':None},
-        {'M':120,'N':120,'I0':40,'r':2,'beta':0.5,'gamma':0.06,'T':250,'start_point':(60,60)}
+        {'M':60,'N':60,'I0':10,'r':2,'beta':0.4,'gamma':0.05,'T':80,'start_point':(15,15)},
+        {'M':60,'N':60,'I0':10,'r':1,'beta':0.3,'gamma':0.05,'T':80,'start_point':None},
+        {'M':80,'N':80,'I0':20,'r':2,'beta':0.5,'gamma':0.06,'T':90,'start_point':(40,40)}
     ]
     for i,p in enumerate(particle_param_sets, start=1):
         seed = base_seed + i
