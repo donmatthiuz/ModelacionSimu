@@ -35,9 +35,7 @@ class ParticleSystem:
         if len(infected) == 0 or len(susceptible) == 0:
             return
         
-
         for s_idx in susceptible:
-
             distances = np.linalg.norm(self.pos[infected] - self.pos[s_idx], axis=1)
             # Si alguno está dentro del radio de infección
             if np.any(distances < self.r):
@@ -68,7 +66,7 @@ class SIRSimulation:
         self.L = L
         self.dt = dt
 
-    def run(self, save_animation=False):
+    def run(self, save_animation=True):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
         
         # Panel izquierdo: partículas
@@ -112,13 +110,14 @@ class SIRSimulation:
         ani = FuncAnimation(fig, update, frames=self.steps, interval=50, blit=True)
         
         if save_animation:
+            print("Guardando animación...")
             ani.save("sir_particles.gif", writer=PillowWriter(fps=20))
             print("Animación guardada como 'sir_particles.gif'")
         
         plt.tight_layout()
         plt.show()
 
-    def plot_curves(self):
+    def plot_curves(self, save_figure=True):
         t = np.arange(len(self.sys.S_hist)) * self.dt
         plt.figure(figsize=(8, 6))
         plt.plot(t, self.sys.S_hist, 'g-', label="S (Susceptibles)", linewidth=2)
@@ -130,6 +129,34 @@ class SIRSimulation:
         plt.legend()
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
+        
+        if save_figure:
+            plt.savefig("sir_curves.png", dpi=300, bbox_inches='tight')
+            print("Gráfica guardada como 'sir_curves.png'")
+        
+        plt.show()
+
+    def plot_final_state(self, save_figure=True):
+        """Guarda el estado final de las partículas"""
+        plt.figure(figsize=(8, 8))
+        sc = plt.scatter(self.sys.pos[:, 0], self.sys.pos[:, 1], 
+                        c=self.sys.state, cmap='RdYlGn_r', vmin=0, vmax=2, s=100, alpha=0.6)
+        plt.xlim(0, self.L)
+        plt.ylim(0, self.L)
+        plt.gca().set_aspect('equal')
+        
+        S_count = np.sum(self.sys.state == 0)
+        I_count = np.sum(self.sys.state == 1)
+        R_count = np.sum(self.sys.state == 2)
+        plt.title(f"Estado Final | S = {S_count} | I = {I_count} | R = {R_count}")
+        
+        cbar = plt.colorbar(sc, ticks=[0, 1, 2])
+        cbar.set_ticklabels(['Susceptible', 'Infectado', 'Recuperado'])
+        
+        if save_figure:
+            plt.savefig("sir_final_state.png", dpi=300, bbox_inches='tight')
+            print("Estado final guardado como 'sir_final_state.png'")
+        
         plt.show()
 
 if __name__ == "__main__":
@@ -144,5 +171,15 @@ if __name__ == "__main__":
         dt=0.1,
         steps=250
     )
-    sim.run(save_animation=False)  
-    sim.plot_curves()
+    
+    # Ejecutar simulación y guardar GIF
+    sim.run(save_animation=True)
+    
+    # Guardar gráficas finales
+    sim.plot_curves(save_figure=True)
+    sim.plot_final_state(save_figure=True)
+    
+    print("\n¡Simulación completada! Se generaron:")
+    print("- sir_particles.gif")
+    print("- sir_curves.png")
+    print("- sir_final_state.png")
