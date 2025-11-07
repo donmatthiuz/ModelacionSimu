@@ -6,7 +6,8 @@ import os
 os.makedirs('../imagenes', exist_ok=True)
 
 N = 100000
-rng = np.random.Generator(np.random.MT19937(123456))
+# seed - elegi usar mi carnet
+rng = np.random.Generator(np.random.MT19937(22779))
 u = rng.random(N)
 mean,var = u.mean(),u.var()
 ks = stats.kstest(u,'uniform')
