@@ -5,19 +5,17 @@ import os
 
 
 def lcg(a,c,m,seed,n):
-x = np.empty(n,dtype=np.int64)
-xi = seed
-for i in range(n):
-xi = (a*xi + c) % m
-x[i] = xi
-return x
-
+    x = np.empty(n,dtype=np.int64)
+    xi = seed
+    for i in range(n):
+        xi = (a*xi + c) % m
+        x[i] = xi
+    return x
+    
 
 os.makedirs('../imagenes', exist_ok=True)
 
-
 N = 100000
-
 
 # conjunto 1 (Park-Miller)
 a1,c1,m1,seed1 = 16807,0,2147483647,12345
