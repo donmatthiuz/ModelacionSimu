@@ -83,48 +83,92 @@ try:
     }
 
     def extract_pvalue(res):
+        """
+        Extrae el p-valor de diferentes formatos de resultado de nistrng.
+        El formato típico es: (Result_object, score) 
+        donde Result_object tiene _score_list que contiene el p-valor
+        """
         if res is None:
             return None
+        
+        # Si es directamente un número válido
         if isinstance(res, (float, int, np.floating, np.integer)):
-            return float(res)
+            val = float(res)
+            if 0 <= val <= 1:
+                return val
+            return None
+        
+        # Si es una tupla/lista - nistrng devuelve (Result_object, score)
         if isinstance(res, (list, tuple)) and len(res) > 0:
-            for item in res:
+            # Intentar extraer del primer elemento (el objeto Result)
+            first_pval = extract_pvalue(res[0])
+            if first_pval is not None:
+                return first_pval
+            # Si no funciona, intentar con los demás elementos
+            for item in res[1:]:
                 pv = extract_pvalue(item)
                 if pv is not None:
                     return pv
             return None
+        
+        # Si tiene atributo _score_list (caso de nistrng.test.Result)
+        if hasattr(res, "_score_list"):
+            score_list = getattr(res, "_score_list")
+            return extract_pvalue(score_list)
+        
+        # Si tiene atributo p_value
+        if hasattr(res, "p_value"):
+            return extract_pvalue(getattr(res, "p_value"))
+        
+        # Si tiene atributo pvalue
+        if hasattr(res, "pvalue"):
+            return extract_pvalue(getattr(res, "pvalue"))
+        
+        # Si es un diccionario
         if isinstance(res, dict):
+            # Buscar claves comunes
+            for key in ['_score_list', 'p_value', 'pvalue', 'p', 'pval']:
+                if key in res:
+                    pv = extract_pvalue(res[key])
+                    if pv is not None:
+                        return pv
+            # Buscar en todos los valores
             for v in res.values():
                 pv = extract_pvalue(v)
                 if pv is not None:
                     return pv
             return None
-        if hasattr(res, "p_value"):
-            return extract_pvalue(getattr(res, "p_value"))
-        if hasattr(res, "pvalues"):
-            return extract_pvalue(getattr(res, "pvalues"))
+        
+        # Si es un array numpy
         try:
             arr = np.asarray(res)
             if arr.size == 0:
                 return None
-            return float(arr.flat[0])
+            val = float(arr.flat[0])
+            if 0 <= val <= 1:
+                return val
         except Exception:
-            return None
+            pass
+        
+        return None
 
-    print("Ejecutando tests NIST SP 800-22:")
+    print("\nEjecutando tests NIST SP 800-22:")
+    print("="*90)
 
     for test_key, test_obj in battery.items():
         test_name = test_name_mapping.get(test_key, test_key)
         try:
-            # many tests accept numpy arrays of 0/1 as int8/int32
+            # Ejecutar test en LCG
             result_lcg = test_obj.run(bits_lcg_array)
             p_lcg = extract_pvalue(result_lcg)
 
+            # Ejecutar test en MT
             result_mt = test_obj.run(bits_mt_array)
             p_mt = extract_pvalue(result_mt)
 
             results[test_name] = {'lcg': p_lcg, 'mt': p_mt}
 
+            # Mostrar resultados
             lcg_status = "PASS" if (p_lcg is not None and p_lcg >= 0.01) else "FAIL"
             mt_status = "PASS" if (p_mt is not None and p_mt >= 0.01) else "FAIL"
 
@@ -134,20 +178,23 @@ try:
             print(f"  {test_name:30s}: LCG={p_lcg_str} ({lcg_status})  MT={p_mt_str} ({mt_status})")
 
         except Exception as e:
-            print(f"  {test_name:30s}: Error - {str(e)[:200]}")
+            print(f"\n  {test_name:30s}: Error - {str(e)[:200]}")
             results[test_name] = {'lcg': None, 'mt': None}
+            import traceback
+            traceback.print_exc()
 
-    library_used = 'nistrng'
+    print("\n" + "="*90)
 
-except ImportError:
-    print("Error: nistrng no instalado. Ejecuta: pip install nistrng")
-    library_used = None
+except ImportError as ie:
+    print(f"Error: nistrng no instalado correctamente.")
+    print(f"Ejecuta: pip install nistrng")
+    print(f"Detalle: {ie}")
 except Exception as e:
     print(f"Error al ejecutar tests: {str(e)}")
     import traceback
     traceback.print_exc()
-    library_used = None
 
+# Generar reporte
 if results:
     rows = []
     for test_name in sorted(results.keys()):
@@ -159,18 +206,24 @@ if results:
     df = pd.DataFrame(rows)
 
     df.to_csv('../imagenes/problema3_nist_results.csv', index=False)
-    #plot()
-
-    print("Resultados guardados en: ../imagenes/problema3_nist_results.csv")
+    
+    print("\n" + "="*90)
+    print("RESULTADOS GUARDADOS")
+    print("="*90)
     print(df.to_string(index=False))
+    print(f"\n✓ Archivo: ../imagenes/problema3_nist_results.csv")
 
+    # Análisis
     alpha = 0.01
     lcg_passed = 0
     mt_passed = 0
     total_tests = 0
 
-    print(f"Analisis con alpha = {alpha}:")
+    print("\n" + "="*90)
+    print(f"ANÁLISIS COMPARATIVO (α = {alpha})")
+    print("="*90)
     print(f"{'Test':<30} {'LCG':<10} {'MT':<10}")
+    print("-"*90)
 
     for _, row in df.iterrows():
         if pd.notna(row['pvalue_lcg']) and pd.notna(row['pvalue_mt']):
@@ -186,17 +239,60 @@ if results:
             print(f"{row['test']:<30} {lcg_result:<10} {mt_result:<10}")
 
     if total_tests > 0:
-        print(f"Resumen:")
-        print(f"LCG: {lcg_passed}/{total_tests} tests pasados ({lcg_passed/total_tests*100:.1f}%)")
-        print(f"Mersenne Twister: {mt_passed}/{total_tests} tests pasados ({mt_passed/total_tests*100:.1f}%)")
+        print("\n" + "="*90)
+        print("RESUMEN")
+        print("="*90)
+        lcg_pct = (lcg_passed/total_tests*100)
+        mt_pct = (mt_passed/total_tests*100)
+        
+        print(f"LCG:              {lcg_passed}/{total_tests} tests pasados ({lcg_pct:.1f}%)")
+        print(f"Mersenne Twister: {mt_passed}/{total_tests} tests pasados ({mt_pct:.1f}%)")
 
+        print("\n" + "="*90)
+        print("CONCLUSIÓN")
+        print("="*90)
+        
         if mt_passed > lcg_passed:
-            print(f"Conclusion: Mersenne Twister tiene mejor desempeño ({mt_passed} vs {lcg_passed} tests pasados)")
+            diff = mt_passed - lcg_passed
+            print(f"✓ MERSENNE TWISTER tiene MEJOR desempeño")
+            print(f"  - Pasa {diff} tests más que LCG ({mt_passed} vs {lcg_passed})")
+            print(f"  - Diferencia de {mt_pct - lcg_pct:.1f} puntos porcentuales")
         elif lcg_passed > mt_passed:
-            print(f"Conclusion: LCG tiene mejor desempeño ({lcg_passed} vs {mt_passed} tests pasados)")
+            diff = lcg_passed - mt_passed
+            print(f"✓ LCG tiene MEJOR desempeño")
+            print(f"  - Pasa {diff} tests más que MT ({lcg_passed} vs {mt_passed})")
+            print(f"  - Diferencia de {lcg_pct - mt_pct:.1f} puntos porcentuales")
         else:
-            print(f"Conclusion: Ambos generadores tienen desempeño similar ({lcg_passed} tests pasados)")
+            print(f"✓ Ambos generadores tienen desempeño SIMILAR")
+            print(f"  - Ambos pasan {lcg_passed} tests")
+        
+        print("\nInterpretación:")
+        if mt_pct >= 90:
+            print("  MT: ★★★★★ Excelente calidad (cryptographically secure)")
+        elif mt_pct >= 80:
+            print("  MT: ★★★★☆ Muy buena calidad")
+        elif mt_pct >= 70:
+            print("  MT: ★★★☆☆ Buena calidad")
+        elif mt_pct >= 50:
+            print("  MT: ★★☆☆☆ Calidad aceptable")
+        else:
+            print("  MT: ★☆☆☆☆ Calidad cuestionable")
+            
+        if lcg_pct >= 90:
+            print("  LCG: ★★★★★ Excelente calidad (inesperado para LCG)")
+        elif lcg_pct >= 80:
+            print("  LCG: ★★★★☆ Muy buena calidad")
+        elif lcg_pct >= 70:
+            print("  LCG: ★★★☆☆ Buena calidad")
+        elif lcg_pct >= 50:
+            print("  LCG: ★★☆☆☆ Calidad aceptable")
+        else:
+            print("  LCG: ★☆☆☆☆ Calidad baja (típico para LCG simple)")
+        
+        print("="*90)
+    else:
+        print("\n⚠ No se pudieron completar tests válidos")
+        print("   Los p-valores extraídos no están en el rango [0, 1]")
 else:
-    print("No se pudieron ejecutar los tests NIST.")
-    print("Instala nistrng: pip install nistrng")
-
+    print("\n❌ No se pudieron ejecutar los tests NIST.")
+    print("   Instala nistrng: pip install nistrng")
