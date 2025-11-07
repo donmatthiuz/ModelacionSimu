@@ -8,33 +8,22 @@ a, c, m, seed = 16807, 0, 2147483647, 22779
 
 def lcg_bits(a, c, m, seed, total_bits):
     xi = int(seed)
-    out = np.empty(total_bits, dtype=np.uint8)
+    out = np.empty(total_bits, dtype=np.int8)
     for i in range(total_bits):
         xi = (a * xi + c) % m
         out[i] = xi & 1
     return out
 
-def read_or_generate_bits(path, generator_func, *args):
-    if os.path.exists(path):
-        with open(path, 'r') as f:
-            bits_str = f.read().strip()
-            if len(bits_str) > 0 and set(bits_str) <= {'0', '1'}:
-                return bits_str
-    bits = generator_func(*args)
-    bits_arr = np.array(bits, dtype=np.uint8)
-    bits_str = ''.join(bits_arr.astype(str).tolist())
-    with open(path, 'w') as f:
-        f.write(bits_str)
-    return bits_str
-
 total_bits = 1_000_000
 
-bitstr_lcg = read_or_generate_bits('../imagenes/lcg_bits.txt', lcg_bits, a, c, m, seed, total_bits)
+bits_lcg_array = lcg_bits(a, c, m, seed, total_bits)
+rng = np.random.default_rng(123456)
+bits_mt_array = rng.integers(0, 2, size=total_bits, dtype=np.int8)
 
-bits_mt = np.random.default_rng(123456).integers(0, 2, size=total_bits, dtype=np.uint8)
-bitstr_mt = read_or_generate_bits('../imagenes/mt_bits.txt', lambda: bits_mt)
+bits_lcg_array = np.ascontiguousarray(bits_lcg_array, dtype=np.int8)
+bits_mt_array = np.ascontiguousarray(bits_mt_array, dtype=np.int8)
 
-print(f"Bits generados: LCG={len(bitstr_lcg)}, MT={len(bitstr_mt)}")
+print(f"Bits generados: LCG={bits_lcg_array.size}, MT={bits_mt_array.size}")
 
 results = {}
 
@@ -93,12 +82,6 @@ try:
         "random_excursion_variant": "random_excursions_variant"
     }
 
-    bits_lcg_array = np.fromiter((1 if ch == '1' else 0 for ch in bitstr_lcg), dtype=np.uint8, count=len(bitstr_lcg))
-    bits_mt_array = np.fromiter((1 if ch == '1' else 0 for ch in bitstr_mt), dtype=np.uint8, count=len(bitstr_mt))
-
-    bits_lcg_array = np.ascontiguousarray(bits_lcg_array)
-    bits_mt_array = np.ascontiguousarray(bits_mt_array)
-
     def extract_pvalue(res):
         if res is None:
             return None
@@ -110,35 +93,30 @@ try:
                 if pv is not None:
                     return pv
             return None
-        if isinstance(res, np.ndarray):
-            if res.size == 0:
-                return None
-            try:
-                return float(np.asarray(res).flat[0])
-            except Exception:
-                return None
-        for attr in ('p_value', 'pvalue', 'score', 'pvalues'):
-            if hasattr(res, attr):
-                val = getattr(res, attr)
-                pv = extract_pvalue(val)
-                if pv is not None:
-                    return pv
-        try:
-            d = vars(res)
-        except Exception:
-            d = None
-        if d:
-            for v in d.values():
+        if isinstance(res, dict):
+            for v in res.values():
                 pv = extract_pvalue(v)
                 if pv is not None:
                     return pv
-        return None
+            return None
+        if hasattr(res, "p_value"):
+            return extract_pvalue(getattr(res, "p_value"))
+        if hasattr(res, "pvalues"):
+            return extract_pvalue(getattr(res, "pvalues"))
+        try:
+            arr = np.asarray(res)
+            if arr.size == 0:
+                return None
+            return float(arr.flat[0])
+        except Exception:
+            return None
 
     print("Ejecutando tests NIST SP 800-22:")
 
     for test_key, test_obj in battery.items():
         test_name = test_name_mapping.get(test_key, test_key)
         try:
+            # many tests accept numpy arrays of 0/1 as int8/int32
             result_lcg = test_obj.run(bits_lcg_array)
             p_lcg = extract_pvalue(result_lcg)
 
@@ -161,7 +139,7 @@ try:
 
     library_used = 'nistrng'
 
-except ImportError as e:
+except ImportError:
     print("Error: nistrng no instalado. Ejecuta: pip install nistrng")
     library_used = None
 except Exception as e:
@@ -181,6 +159,7 @@ if results:
     df = pd.DataFrame(rows)
 
     df.to_csv('../imagenes/problema3_nist_results.csv', index=False)
+    #plot()
 
     print("Resultados guardados en: ../imagenes/problema3_nist_results.csv")
     print(df.to_string(index=False))
