@@ -2,3 +2,5 @@ pulp
 matplotlib
 pandas
 numpy
+numpy 
+scipy
